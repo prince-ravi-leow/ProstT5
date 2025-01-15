@@ -87,9 +87,9 @@ def read_fasta(fasta_path, split_char, id_field, is_3Di):
     example = sequences[uniprot_id]
 
     print("##########################")
-    print(
-        f"Input is 3Di: {is_3Di} . Sequence below should be lower-case if input is 3Di."
-    )
+    # print(
+    #     f"Input is 3Di: {is_3Di} . Sequence below should be lower-case if input is 3Di."
+    # )
     print(f"Example sequence: >{uniprot_id}\n{example}")
     print("##########################")
 
