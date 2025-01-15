@@ -308,7 +308,7 @@ def create_arg_parser():
     parser.add_argument(
         "--device",
         choices=("cuda:0", "cuda:1", "mps", "cpu"),
-        default=("cuda:0"),
+        default="cuda:0",
         help="Choose which device to run on (useful for distributing jobs accross multiple GPU's)",
     )
 
@@ -348,6 +348,27 @@ def create_arg_parser():
     return parser
 
 
+def get_torch_device(args_device):
+    if args_device.startswith("cuda"):
+        if torch.cuda.is_available():
+            device = torch.device(args_device)
+        else:
+            raise ValueError(f"CUDA is not available, but {args_device} was specified.")
+    elif args_device == "mps":
+        if torch.backends.mps.is_available():
+            device = torch.device("mps")
+        else:
+            raise ValueError("MPS is not available, but 'mps' was specified.")
+    elif args_device == "cpu":
+        device = torch.device("cpu")
+    else:
+        raise ValueError(f"Invalid device option: {args_device}")
+
+    print(f"Using device: {device}")
+
+    return device
+
+
 def main():
     parser = create_arg_parser()
     args = parser.parse_args()
@@ -361,14 +382,7 @@ def main():
     else:
         out_path.mkdir()
 
-    if torch.cuda.is_available():
-        if args.device in ["cuda:0", "cuda:1"]:
-            device = torch.device(args.device)
-    elif torch.backends.mps.is_available():
-        device = torch.device("mps")
-    else:
-        device = torch.device("cpu")
-    print(f"Using device: {device}")
+    device = get_torch_device(args.device)
 
     model_dir = Path(args.model)  # path/repo_link to checkpoint
 
