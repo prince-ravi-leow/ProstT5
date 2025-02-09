@@ -6,14 +6,14 @@
 from argparse import ArgumentParser, RawTextHelpFormatter
 from pathlib import Path
 
-from scripts.predict_3Di_encoderOnly import get_embeddings
-from scripts.translate import get_torch_device, translate
-
 # import torch
 from tqdm import tqdm
 
 # from transformers import AutoModelForSeq2SeqLM, T5Tokenizer, set_seed
 from transformers import set_seed
+
+from scripts.predict_3Di_encoderOnly import get_embeddings
+from scripts.translate import get_torch_device, translate
 from utils import _run_command, check_input
 
 
@@ -86,9 +86,9 @@ def parse_args():
     args = parser.parse_args()
 
     if args.seq:
-        assert (
-            not args.encoderOnly and args.translate
-        ), "Please select EITHER encoderOnly or translate mode"
+        assert not args.encoderOnly and args.translate, (
+            "Please select EITHER encoderOnly or translate mode"
+        )
 
     return args
 
