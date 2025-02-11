@@ -115,13 +115,13 @@ def create_arg_parser():
         "--translate",
         action="store_true",
         default=False,
-        help="Use 'encoderOnly' mode (SLOWER, MORE ACCURATE)",
+        help="Use 'translate' mode (SLOWER, MORE ACCURATE)",
     )
     parser.add_argument(
         "--device",
         choices=("cuda:0", "cuda:1", "mps", "cpu"),
         default="cuda:0",
-        help="Choose which device to run on (useful for distributing jobs accross multiple GPU's)",
+        help="Choose which device to run on (useful for distributing jobs across multiple GPU's)",
     )
 
     args = parser.parse_args()
