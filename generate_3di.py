@@ -1,13 +1,9 @@
-#!/usr/bin/env python3
+"""Generate 3di from aa seq or protein struct (ProstT5 + weights and foldseek installation)"""
 
-# """Generate 3di from aa seq or protein struct (ProstT5 + weights and foldseek installation)"""
-
-# Adapted from https://github.com/mheinzinger/ProstT5/tree/main/scripts [predict_3Di_encoderOnly.py , translate.py]
-
-import shutil
 import uuid
 from argparse import ArgumentParser, RawTextHelpFormatter
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from scripts.predict_3Di_encoderOnly import get_embeddings
 from scripts.translate import get_torch_device, translate
@@ -29,30 +25,70 @@ aa2ss = {
 
 
 def from_struct_get_3di(input_dir, output_dir):
-    tmp_dir = Path(output_dir / "tmp_foldseek")
-    tmp_dir.mkdir(exist_ok=True)
+    """Run foldseek through subprocess on directory containing .pdb files, get 3di"""
 
-    queryDB = tmp_dir / "queryDB"
-    queryDB_h = tmp_dir / "queryDB_h"
-    queryDB_ss_h = tmp_dir / "queryDB_ss_h"
-    queryDB_ss = tmp_dir / "queryDB_ss"
-    queryDB_ss_fasta = tmp_dir / "queryDB_ss.fasta"
-    commands = [
-        f"foldseek createdb {input_dir.as_posix()} {queryDB.as_posix()}",
-        f"foldseek lndb {queryDB_h.as_posix()} {queryDB_ss_h.as_posix()}",
-        f"foldseek convert2fasta {queryDB_ss.as_posix()} {queryDB_ss_fasta.as_posix()}",
-    ]
-    for cmd in commands:
-        _run_command(cmd)
+    with TemporaryDirectory(dir=output_dir) as tmp_dir:
+        tmp_dir = Path(tmp_dir)
+        run_id = str(uuid.uuid4())
+        output_file_path = output_dir / f"3di_from_struct_{run_id}.fasta"
 
-    run_id = str(uuid.uuid4())
-    output_file_path = output_dir / f"3di_from_struct_{run_id}.fasta"
+        queryDB = tmp_dir / "queryDB"
+        queryDB_h = tmp_dir / "queryDB_h"
+        queryDB_ss_h = tmp_dir / "queryDB_ss_h"
+        queryDB_ss = tmp_dir / "queryDB_ss"
 
-    shutil.copy(queryDB_ss_fasta, output_file_path)
-    print(f"Results written to {str(output_file_path)}")
+        commands = [
+            f"foldseek createdb {input_dir} {queryDB}",
+            f"foldseek lndb {queryDB_h} {queryDB_ss_h}",
+            f"foldseek convert2fasta {queryDB_ss} {output_file_path}",
+        ]
+
+        for cmd in commands:
+            print(f"Running:\n{cmd}")
+            _run_command(cmd)
+
+        print(f"Results written to {output_file_path}")
+
+
+def from_seq_get_3di(input_dir, output_dir, args):
+    """Run ProstT5 directory containing protein sequence fasta files, get 3di
+    translation mode uses entire , or using CNN (mode: encoderOnly)"""
+    device = get_torch_device(args.device)
+
+    seq_files = list(input_dir.glob("*.fasta"))
+    print(f"Input sequence files:\n{seq_files}")
+
+    for seq_file in tqdm(seq_files):
+        if args.translate:
+            outfile_name = output_dir / f"{Path(seq_file).stem}_3di_translate.fasta"
+            translate(
+                in_path=seq_file,
+                out_path=outfile_name,
+                model_dir="Rostlab/ProstT5_fp16",
+                split_char="!",
+                id_field=0,
+                half_precision=1,
+                is_3Di=False,
+                device=device,
+                gen_kwargs=aa2ss,
+            )
+        if args.encoderOnly:
+            outfile_name = output_dir / f"{Path(seq_file).stem}_3di_encoderOnly.fasta"
+            get_embeddings(
+                seq_path=seq_file,
+                out_path=outfile_name,
+                model_dir="Rostlab/ProstT5_fp16",
+                device=device,
+                split_char="!",
+                id_field=0,
+                half_precision=1,
+                output_probs=False,
+            )
+        print(f"Results written to: {outfile_name}")
 
 
 def create_arg_parser():
+    """Create ArgumentParser"""
     help_msg = """
     Generate 3di alphabet from either AA seq or prot struct, ONLY submit directory
     
@@ -103,12 +139,13 @@ def main():
     input_dir = Path(args.input_dir)
     output_dir = Path(args.output_dir)
     mode = args.mode
-    args_device = args.device
 
     if output_dir.is_dir():
-        print("Result directory already exists! - careful for overwriting results!")
+        print(
+            "WARNING: Result directory already exists; make sure to not overwrite results"
+        )
     else:
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir()
 
     if mode == "struct":
         check_input(input_dir, "pdb")
@@ -116,34 +153,7 @@ def main():
 
     if mode == "seq":
         check_input(input_dir, "fasta")
-        device = get_torch_device(args_device)
-        seq_files = list(input_dir.glob("*.fasta"))
-        print(seq_files)
-        for seq_file in tqdm(seq_files):
-            outfile_name = f"{Path(seq_file).stem}_3di.fasta"
-            if args.translate:
-                translate(
-                    in_path=seq_file,
-                    out_path=outfile_name,
-                    model_dir="/mnt/common/prot/models/huggingface/hub/models--Rostlab--ProstT5_fp16/snapshots/07a6547d51de603f1be84fd9f2db4680ee535a86",
-                    split_char="!",
-                    id_field=0,
-                    half_precision=1,
-                    is_3Di=False,
-                    device=device,
-                    gen_kwargs=aa2ss,
-                )
-            if args.encoderOnly:
-                get_embeddings(
-                    seq_path=seq_file,
-                    out_path=outfile_name,
-                    model_dir="/mnt/common/prot/models/huggingface/hub/models--Rostlab--ProstT5_fp16/snapshots/07a6547d51de603f1be84fd9f2db4680ee535a86",
-                    device=device,
-                    split_char="!",
-                    id_field=0,
-                    half_precision=1,
-                    output_probs=False,
-                )
+        from_seq_get_3di(input_dir, output_dir, args)
 
 
 if __name__ == "__main__":

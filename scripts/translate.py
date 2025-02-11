@@ -84,20 +84,21 @@ def read_fasta(fasta_path, split_char, id_field, is_3Di):
                 else:
                     sequences[uniprot_id] += "".join(line.split()).replace("-", "")
 
-    example = sequences[uniprot_id]
+    # example = sequences[uniprot_id]
 
-    print("##########################")
+    # print("##########################")
     # print(
     #     f"Input is 3Di: {is_3Di} . Sequence below should be lower-case if input is 3Di."
     # )
-    print(f"Example sequence: >{uniprot_id}\n{example}")
-    print("##########################")
+    # print(f"Example sequence: >{uniprot_id}\n{example}")
+    # print("##########################")
 
     return sequences
 
 
-def write_fasta(out_path, results, prefix):
-    seq_out_p = out_path / f"{prefix}_sequences.fasta"
+# def write_fasta(out_path, results, prefix):
+def write_fasta(out_path, results):
+    seq_out_p = out_path
     with open(seq_out_p, "w") as out_f:  # write sequences
         out_f.write("\n".join([f">{seq_id}\n{seq}" for seq_id, seq in results.items()]))
     return None
@@ -130,7 +131,6 @@ def translate(
     max_seq_len=1000,
     max_batch=1,
 ):
-
     model, tokenizer = get_T5_model(model_dir, half_precision, device)
 
     seq_dict = read_fasta(in_path, split_char, id_field, is_3Di)
@@ -159,7 +159,7 @@ def translate(
             avg_length, len(seq_dict)
         )
     )
-    print("Parameters used for generation: {}".format(gen_kwargs))
+    # print("Parameters used for generation: {}".format(gen_kwargs))
 
     batch = list()
     generation_results = {}
@@ -229,7 +229,8 @@ def translate(
                 for seq_idx in range(
                     num_return_sequences
                 ):  # all sequences generated per individual input sequence
-                    out_id = f"{seq_idx}_" + identifier
+                    # out_id = f"{seq_idx}_" + identifier
+                    out_id = identifier
                     s_len = seq_lens[batch_idx]
                     # offset accounts for multiple sequences generated per input sequence
                     batch_seq_idx = (batch_idx * num_return_sequences) + seq_idx
@@ -250,20 +251,21 @@ def translate(
                                 t_len = len(t_seq)
 
                     generation_results[out_id] = t_seq.upper()
-                    if len(generation_results) == 1:
-                        print(
-                            f"Example generation for {out_id}:\nseqs[batch_idx]\n{generation_results[out_id]}"
-                        )
+                    # if len(generation_results) == 1:
+                    #     print(
+                    #         f"Example generation for {out_id}:\nseqs[batch_idx]\n{generation_results[out_id]}"
+                    #     )
 
     compute_time = time.time() - start
     print(
         f"Translating {len(generation_results)} proteins with an avg. length of {avg_length} "
-        + f" took {compute_time/60:.1f}[m] ({compute_time/len(generation_results):.1f}[s/protein])\n"
-        + "Writing results ..."
+        + f" took {compute_time / 60:.1f}[m] ({compute_time / len(generation_results):.1f}[s/protein])\n"
+        # + "Writing results ..."
     )
-    write_fasta(out_path, generation_results, "generated")
-    if len(gen_kwargs) > 0:
-        write_config(out_path, gen_kwargs)
+    # write_fasta(out_path, generation_results, "generated")
+    write_fasta(out_path, generation_results)
+    # if len(gen_kwargs) > 0:
+    #     write_config(out_path, gen_kwargs)
     return None
 
 

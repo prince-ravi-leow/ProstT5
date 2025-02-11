@@ -57,12 +57,10 @@ class CNN(nn.Module):
 def get_T5_model(model_dir, device):
     print("Loading T5 from: {}".format(model_dir))
     model = T5EncoderModel.from_pretrained(
-        # "Rostlab/ProstT5_fp16", cache_dir=model_dir
         model_dir,
     ).to(device)
     model = model.eval()
     vocab = T5Tokenizer.from_pretrained(
-        # "Rostlab/ProstT5_fp16", do_lower_case=False, cache_dir=model_dir
         model_dir,
         do_lower_case=False,
     )
@@ -231,12 +229,12 @@ def get_embeddings(
         predictor.to(torch.float32)
         print("Using models in full-precision.")
 
-    print("########################################")
-    print(
-        "Example sequence: {}\n{}".format(
-            next(iter(seq_dict.keys())), next(iter(seq_dict.values()))
-        )
-    )
+    # print("########################################")
+    # print(
+    #     "Example sequence: {}\n{}".format(
+    #         next(iter(seq_dict.keys())), next(iter(seq_dict.values()))
+    #     )
+    # )
     print("########################################")
     print("Total number of sequences: {}".format(len(seq_dict)))
 
@@ -330,10 +328,10 @@ def get_embeddings(
                 assert s_len == len(predictions[identifier][0]), print(
                     f"Length mismatch for {identifier}: is:{len(predictions[identifier])} vs should:{s_len}"
                 )
-                if len(predictions) == 1:
-                    print(
-                        f"Example: predicted for protein {identifier} with length {s_len}: {predictions[identifier]}"
-                    )
+                # if len(predictions) == 1:
+                #     print(
+                #         f"Example: predicted for protein {identifier} with length {s_len}: {predictions[identifier]}"
+                #     )
 
     end = time.time()
     print("\n############# STATS #############")
@@ -343,7 +341,7 @@ def get_embeddings(
             end - start, (end - start) / len(predictions), avg_length
         )
     )
-    print("Writing results now to disk ...")
+    # print("Writing results now to disk ...")
 
     write_predictions(predictions, out_path)
     if output_probs:
@@ -353,7 +351,7 @@ def get_embeddings(
 
 
 def create_arg_parser():
-    """ "Creates and returns the ArgumentParser object."""
+    """Creates and returns the ArgumentParser object."""
 
     # Instantiate the parser
     parser = argparse.ArgumentParser(
