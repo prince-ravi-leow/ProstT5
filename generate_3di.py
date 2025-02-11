@@ -5,6 +5,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from config import HF_CACHE_DIR
 from scripts.predict_3Di_encoderOnly import get_embeddings
 from scripts.translate import get_torch_device, translate
 from tqdm import tqdm
@@ -78,6 +79,7 @@ def from_seq_get_3di(input_dir, output_dir, args):
                 seq_path=seq_file,
                 out_path=outfile_name,
                 model_dir="Rostlab/ProstT5_fp16",
+                cache_dir=HF_CACHE_DIR,
                 device=device,
                 split_char="!",
                 id_field=0,

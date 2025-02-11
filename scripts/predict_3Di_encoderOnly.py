@@ -54,14 +54,20 @@ class CNN(nn.Module):
         return Yhat
 
 
-def get_T5_model(model_dir, device):
+def get_T5_model(model_dir, cache_dir, device):
     print("Loading T5 from: {}".format(model_dir))
-    model = T5EncoderModel.from_pretrained(
-        model_dir,
-    ).to(device)
+    # model = T5EncoderModel.from_pretrained(
+    #     model_dir,
+    # ).to(device)
+    model = T5EncoderModel.from_pretrained(model_dir, cache_dir=cache_dir).to(device)
     model = model.eval()
+    # vocab = T5Tokenizer.from_pretrained(
+    #     model_dir,
+    #     do_lower_case=False,
+    # )
     vocab = T5Tokenizer.from_pretrained(
         model_dir,
+        cache_dir=cache_dir,
         do_lower_case=False,
     )
 
@@ -201,6 +207,7 @@ def get_embeddings(
     seq_path,
     out_path,
     model_dir,
+    cache_dir,
     device,
     split_char,
     id_field,
@@ -217,7 +224,8 @@ def get_embeddings(
     seq_dict = read_fasta(seq_path, split_char, id_field)
     prefix = "<AA2fold>"
 
-    model, vocab = get_T5_model(model_dir, device)
+    # model, vocab = get_T5_model(model_dir, device)
+    model, vocab = get_T5_model(model_dir, cache_dir, device)
     predictor = load_predictor(device)
 
     if half_precision:
