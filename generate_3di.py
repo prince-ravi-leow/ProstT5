@@ -5,7 +5,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from config import HF_CACHE_DIR
+from config import FOLDSEEK_BIN, HF_CACHE_DIR
 from scripts.predict_3Di_encoderOnly import get_embeddings
 from scripts.translate import get_torch_device, translate
 from tqdm import tqdm
@@ -39,9 +39,9 @@ def from_struct_get_3di(input_dir, output_dir):
         queryDB_ss = tmp_dir / "queryDB_ss"
 
         commands = [
-            f"foldseek createdb {input_dir} {queryDB}",
-            f"foldseek lndb {queryDB_h} {queryDB_ss_h}",
-            f"foldseek convert2fasta {queryDB_ss} {output_file_path}",
+            f"{FOLDSEEK_BIN} createdb {input_dir} {queryDB}",
+            f"{FOLDSEEK_BIN} lndb {queryDB_h} {queryDB_ss_h}",
+            f"{FOLDSEEK_BIN} convert2fasta {queryDB_ss} {output_file_path}",
         ]
 
         for cmd in commands:

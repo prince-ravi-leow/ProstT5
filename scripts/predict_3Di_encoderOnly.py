@@ -56,9 +56,7 @@ class CNN(nn.Module):
 
 def get_T5_model(model_dir, cache_dir, device):
     print("Loading T5 from: {}".format(model_dir))
-    # model = T5EncoderModel.from_pretrained(
-    #     model_dir,
-    # ).to(device)
+
     model = T5EncoderModel.from_pretrained(model_dir, cache_dir=cache_dir).to(device)
     model = model.eval()
     # vocab = T5Tokenizer.from_pretrained(
