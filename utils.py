@@ -11,7 +11,10 @@ IS_WINDOWS = sys.platform.startswith("win")
 
 
 def _run_command(command, **kwargs):
-    """Basic shell command runner"""
+    """
+    Basic shell command runner
+    Credits: Neil Scheidwasser-Clow
+    """
     if IS_WINDOWS:
         command = f"wsl {command}"
 
@@ -33,9 +36,9 @@ def _run_command(command, **kwargs):
 def check_input(input_dir, ext):
     """Check files with provided extension exist in provided directory"""
     assert Path(input_dir).is_dir(), "Invalid input dir, please check again"
-    assert (
-        len(list(Path(input_dir).glob(f"*.{ext}"))) != 0
-    ), f"No files with supplied file extension {ext}, please check again"
+    assert len(list(Path(input_dir).glob(f"*.{ext}"))) != 0, (
+        f"No files with supplied file extension {ext}, please check again"
+    )
 
 
 def parse_json_to_args(config_path):
